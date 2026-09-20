@@ -1,30 +1,92 @@
-// Замени на свой, чтобы получить независимый от других набор данных.
-// "боевая" версия инстапро лежит в ключе prod
-const personalKey = "prod";
-const baseHost = "https://webdev-hw-api.vercel.app";
-const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
+const BASE_URL = "https://wedev-api.sky.pro/api/v1/hastena07/instapro";
+const UPLOAD_URL = "https://wedev-api.sky.pro/api/upload/image";
 
-export function getPosts({ token }) {
-  return fetch(postsHost, {
+export const getPosts = async ({ token }) => {
+  const res = await fetch(BASE_URL, {
     method: "GET",
+    headers: token ? { Authorization: token } : {},
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
+  }
+
+  const data = await res.json();
+  return data.posts || [];
+};
+
+export const getUserPosts = async ({ token, userId }) => {
+  const res = await fetch(`${BASE_URL}/${userId}/user-posts`, {
+    method: "GET",
+    headers: token ? { Authorization: token } : {},
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
+  }
+
+  const data = await res.json();
+  return data.posts || [];
+};
+
+export const addPost = async ({ token, description, imageUrl }) => {
+  const res = await fetch(BASE_URL, {
+    method: "POST",
     headers: {
       Authorization: token,
     },
-  })
-    .then((response) => {
-      if (response.status === 401) {
-        throw new Error("Нет авторизации");
-      }
+    body: JSON.stringify({
+      description,
+      imageUrl,
+    }),
+  });
 
-      return response.json();
-    })
-    .then((data) => {
-      return data.posts;
-    });
-}
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
+  }
 
-export function registerUser({ login, password, name, imageUrl }) {
-  return fetch(baseHost + "/api/user", {
+  return await res.json();
+};
+
+export const likePost = async ({ token, postId }) => {
+  
+  const res = await fetch(`${BASE_URL}/${postId}/like`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
+  }
+
+  return await res.json();
+};
+
+export const dislikePost = async ({ token, postId }) => {
+  
+  const res = await fetch(`${BASE_URL}/${postId}/dislike`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
+  }
+
+  return await res.json();
+};
+
+export const registerUser = async ({ login, password, name, imageUrl }) => {
+  const res = await fetch("https://wedev-api.sky.pro/api/user", {
     method: "POST",
     body: JSON.stringify({
       login,
@@ -32,38 +94,46 @@ export function registerUser({ login, password, name, imageUrl }) {
       name,
       imageUrl,
     }),
-  }).then((response) => {
-    if (response.status === 400) {
-      throw new Error("Такой пользователь уже существует");
-    }
-    return response.json();
   });
-}
 
-export function loginUser({ login, password }) {
-  return fetch(baseHost + "/api/user/login", {
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
+  }
+
+  return await res.json();
+};
+
+export const loginUser = async ({ login, password }) => {
+  const res = await fetch("https://wedev-api.sky.pro/api/user/login", {
     method: "POST",
     body: JSON.stringify({
       login,
       password,
     }),
-  }).then((response) => {
-    if (response.status === 400) {
-      throw new Error("Неверный логин или пароль");
-    }
-    return response.json();
   });
-}
 
-// Загружает картинку в облако, возвращает url загруженной картинки
-export function uploadImage({ file }) {
-  const data = new FormData();
-  data.append("file", file);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
+  }
 
-  return fetch(baseHost + "/api/upload/image", {
+  return await res.json();
+};
+
+export const uploadImage = async ({ file }) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(UPLOAD_URL, {
     method: "POST",
-    body: data,
-  }).then((response) => {
-    return response.json();
+    body: formData,
   });
-}
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
+  }
+
+  return await res.json();
+};

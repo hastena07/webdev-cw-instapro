@@ -196,3 +196,25 @@
   width: 100%;
   text-align: center;
 }
+.header-user-avatar {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  background-color: #e0e0e0; /* запасной цвет, если нет фото */
+}
+
+.header-button.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 18px;
+  color: #333;
+}
