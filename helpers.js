@@ -2,7 +2,7 @@ export function saveUserToLocalStorage(user) {
   window.localStorage.setItem("user", JSON.stringify(user));
 }
 
-export function getUserFromLocalStorage(user) {
+export function getUserFromLocalStorage() {
   try {
     return JSON.parse(window.localStorage.getItem("user"));
   } catch (error) {
@@ -10,7 +10,7 @@ export function getUserFromLocalStorage(user) {
   }
 }
 
-export function removeUserFromLocalStorage(user) {
+export function removeUserFromLocalStorage() {
   window.localStorage.removeItem("user");
 }
 
@@ -52,4 +52,14 @@ export function formatDate(dateString) {
   }
   const years = Math.floor(days / 365);
   return `${years} ${plural(years, ["год", "года", "лет"])} назад`;
+}
+
+export function escapeHtml(str) {
+  if (typeof str !== "string") return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

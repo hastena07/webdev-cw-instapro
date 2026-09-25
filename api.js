@@ -1,38 +1,50 @@
-const BASE_URL = "https://wedev-api.sky.pro/api/v1/hastena07/instapro";
-const UPLOAD_URL = "https://wedev-api.sky.pro/api/upload/image";
+const personalKey = "hastena07";
+const baseHost = "https://wedev-api.sky.pro";
+const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
 
-export const getPosts = async ({ token }) => {
-  const res = await fetch(BASE_URL, {
+// --- ПОСТЫ ---
+
+export function getPosts({ token }) {
+  return fetch(postsHost, {
     method: "GET",
-    headers: token ? { Authorization: token } : {},
-  });
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => {
+      if (response.status === 401) {
+        throw new Error("Нет авторизации");
+      }
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить ленту. Попробуйте позже.");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      return data.posts || [];
+    });
+}
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
-  }
-
-  const data = await res.json();
-  return data.posts || [];
-};
-
-export const getUserPosts = async ({ token, userId }) => {
-  const res = await fetch(`${BASE_URL}/${userId}/user-posts`, {
+export function getUserPosts({ token, userId }) {
+  return fetch(`${postsHost}/user-posts/${userId}`, {
     method: "GET",
-    headers: token ? { Authorization: token } : {},
-  });
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить посты пользователя.");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      return data.posts || [];
+    });
+}
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
-  }
-
-  const data = await res.json();
-  return data.posts || [];
-};
-
-export const addPost = async ({ token, description, imageUrl }) => {
-  const res = await fetch(BASE_URL, {
+export function addPost({ token, description, imageUrl }) {
+  return fetch(postsHost, {
     method: "POST",
     headers: {
       Authorization: token,
@@ -41,99 +53,114 @@ export const addPost = async ({ token, description, imageUrl }) => {
       description,
       imageUrl,
     }),
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Не удалось опубликовать пост.");
+    }
+    return response.json();
   });
+}
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
-  }
+export function deletePost({ token, postId }) {
+  return fetch(`${postsHost}/${postId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: token,
+    },
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Не удалось удалить пост.");
+    }
+    return response.json();
+  });
+}
 
-  return await res.json();
-};
+// --- ЛАЙКИ ---
 
-export const likePost = async ({ token, postId }) => {
-  
-  const res = await fetch(`${BASE_URL}/${postId}/like`, {
+export function likePost({ token, postId }) {
+  return fetch(`${postsHost}/${postId}/like`, {
     method: "POST",
     headers: {
       Authorization: token,
     },
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Не удалось поставить лайк.");
+    }
+    return response.json();
   });
+}
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
-  }
-
-  return await res.json();
-};
-
-export const dislikePost = async ({ token, postId }) => {
-  
-  const res = await fetch(`${BASE_URL}/${postId}/dislike`, {
+export function dislikePost({ token, postId }) {
+  return fetch(`${postsHost}/${postId}/dislike`, {
     method: "POST",
     headers: {
       Authorization: token,
     },
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Не удалось убрать лайк.");
+    }
+    return response.json();
   });
+}
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
-  }
+// --- АВТОРИЗАЦИЯ (Content-Type нужен только здесь) ---
 
-  return await res.json();
-};
-
-export const registerUser = async ({ login, password, name, imageUrl }) => {
-  const res = await fetch("https://wedev-api.sky.pro/api/user", {
+export function registerUser({ login, password, name, imageUrl }) {
+  return fetch(baseHost + "/api/user", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       login,
       password,
       name,
       imageUrl,
     }),
+  }).then((response) => {
+    if (response.status === 400) {
+      throw new Error("Такой пользователь уже существует");
+    }
+    if (!response.ok) {
+      throw new Error("Не удалось зарегистрироваться. Попробуйте позже.");
+    }
+    return response.json();
   });
+}
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
-  }
-
-  return await res.json();
-};
-
-export const loginUser = async ({ login, password }) => {
-  const res = await fetch("https://wedev-api.sky.pro/api/user/login", {
+export function loginUser({ login, password }) {
+  return fetch(baseHost + "/api/user/login", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       login,
       password,
     }),
+  }).then((response) => {
+    if (response.status === 400) {
+      throw new Error("Неверный логин или пароль");
+    }
+    if (!response.ok) {
+      throw new Error("Не удалось войти. Попробуйте позже.");
+    }
+    return response.json();
   });
+}
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
-  }
+// --- ЗАГРУЗКА ФОТО ---
 
-  return await res.json();
-};
+export function uploadImage({ file }) {
+  const data = new FormData();
+  data.append("file", file);
 
-export const uploadImage = async ({ file }) => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const res = await fetch(UPLOAD_URL, {
+  return fetch(baseHost + "/api/upload/image", {
     method: "POST",
-    body: formData,
+    body: data,
+  }).then((response) => {
+    return response.json();
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ошибка ${res.status}: ${text.slice(0, 200)}`);
-  }
-
-  return await res.json();
-};
+}

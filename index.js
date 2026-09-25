@@ -30,14 +30,7 @@ export const logout = () => {
   goToPage(POSTS_PAGE);
 };
 
-
 const getPostId = (post) => post.id || post._id || "";
-
-
-const getAuthorId = (post) => {
-  const author = post.author || post.user || {};
-  return author.id || post.userId || "";
-};
 
 export const handleLikeClick = (postId) => {
   if (!user) {
@@ -45,31 +38,27 @@ export const handleLikeClick = (postId) => {
     return;
   }
 
-  console.log("Лайк клик, postId:", postId);
-  console.log("Доступные посты:", posts.map((p) => getPostId(p)));
-
-  
   const post = posts.find((p) => getPostId(p) === postId);
   if (!post) {
-    console.error("Пост не найден:", postId);
     return;
   }
 
-  const isLiked = (post.likes || []).some(
-    (like) => (like.user_id || like.userId) === user.id
-  );
+  const userId = user.id;
+  const isLiked = (post.likes || []).some((like) => {
+    if (typeof like === "string" || typeof like === "number") {
+      return String(like) === String(userId);
+    }
+    const likedUserId = like.user_id ?? like.userId ?? like.id;
+    return String(likedUserId) === String(userId);
+  });
+
   const token = getToken();
-
-  console.log("isLiked:", isLiked, "postId:", postId);
-
   const apiCall = isLiked
     ? dislikePost({ token, postId })
     : likePost({ token, postId });
 
   apiCall
     .then((responseData) => {
-      console.log("Ответ API лайка:", responseData);
-      
       const updatedPost = responseData.post || responseData;
       const index = posts.findIndex((p) => getPostId(p) === postId);
       if (index !== -1) {
@@ -78,8 +67,9 @@ export const handleLikeClick = (postId) => {
       renderApp();
     })
     .catch((error) => {
-      console.error("Ошибка при лайке:", error);
-      
+      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+        console.error("[Network] Не удалось отправить лайк: нет соединения.", error);
+      }
       if (page === POSTS_PAGE) {
         goToPage(POSTS_PAGE);
       } else if (page === USER_POSTS_PAGE && pageData) {
@@ -109,8 +99,12 @@ export const goToPage = (newPage, data) => {
           renderApp();
         })
         .catch((error) => {
-          console.error(error);
-          goToPage(POSTS_PAGE);
+          if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+            console.error("[Network] Не удалось загрузить посты:", error);
+          }
+          page = POSTS_PAGE;
+          posts = [];
+          renderApp();
         });
     }
 
@@ -125,8 +119,12 @@ export const goToPage = (newPage, data) => {
           renderApp();
         })
         .catch((error) => {
-          console.error(error);
-          goToPage(POSTS_PAGE);
+          if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+            console.error("[Network] Не удалось загрузить посты пользователя:", error);
+          }
+          page = USER_POSTS_PAGE;
+          posts = [];
+          renderApp();
         });
     }
 
@@ -139,6 +137,7 @@ export const goToPage = (newPage, data) => {
 
 const renderApp = () => {
   const appEl = document.getElementById("app");
+
   if (page === LOADING_PAGE) {
     return renderLoadingPageComponent({ appEl, user, goToPage });
   }
@@ -164,8 +163,13 @@ const renderApp = () => {
         addPost({ token, description, imageUrl })
           .then(() => goToPage(POSTS_PAGE))
           .catch((error) => {
-            console.error(error);
-            alert(error.message);
+            if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+              console.error("[Network] Не удалось добавить пост:", error);
+            }
+            const errorEl = appEl.querySelector(".form-error");
+            if (errorEl) {
+              errorEl.textContent = error.message;
+            }
           });
       },
     });
