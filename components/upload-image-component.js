@@ -1,7 +1,6 @@
 import { uploadImage } from "../api.js";
 
 export function renderUploadImageComponent({ element, onImageUrlChange }) {
-  
   let imageUrl = "";
 
   const render = () => {
@@ -10,7 +9,7 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
         ${
           imageUrl
             ? `
-            <div class="file-upload-image-container">
+            <div class="file-upload-image-conrainer">
               <img class="file-upload-image" src="${imageUrl}" alt="Загруженное изображение">
               <button class="file-upload-remove-button button">Заменить фото</button>
             </div>
@@ -29,7 +28,6 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
       </div>
     `;
 
-    
     const fileInputElement = element.querySelector(".file-upload-input");
     fileInputElement?.addEventListener("change", () => {
       const file = fileInputElement.files[0];
@@ -37,23 +35,21 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
         const labelEl = document.querySelector(".file-upload-label");
         labelEl.setAttribute("disabled", true);
         labelEl.textContent = "Загружаю файл...";
-        
-        
+
         uploadImage({ file }).then(({ fileUrl }) => {
-          imageUrl = fileUrl; 
-          onImageUrlChange(imageUrl); 
-          render(); 
+          imageUrl = fileUrl;
+          onImageUrlChange(imageUrl);
+          render();
         });
       }
     });
 
-    
     element
       .querySelector(".file-upload-remove-button")
       ?.addEventListener("click", () => {
-        imageUrl = ""; 
-        onImageUrlChange(imageUrl); 
-        render(); 
+        imageUrl = "";
+        onImageUrlChange(imageUrl);
+        render();
       });
   };
 

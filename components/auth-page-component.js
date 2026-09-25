@@ -2,15 +2,10 @@ import { loginUser, registerUser } from "../api.js";
 import { renderHeaderComponent } from "./header-component.js";
 import { renderUploadImageComponent } from "./upload-image-component.js";
 
-
 export function renderAuthPageComponent({ appEl, setUser }) {
- 
   let isLoginMode = true;
-
- 
   let imageUrl = "";
 
-  
   const renderForm = () => {
     const appHtml = `
       <div class="page-container">
@@ -48,22 +43,19 @@ export function renderAuthPageComponent({ appEl, setUser }) {
                 </p>
               </div>
           </div>
-      </div>    
+      </div>
     `;
 
     appEl.innerHTML = appHtml;
 
-    
     const setError = (message) => {
       appEl.querySelector(".form-error").textContent = message;
     };
 
-   
     renderHeaderComponent({
       element: document.querySelector(".header-container"),
     });
 
-    
     const uploadImageContainer = appEl.querySelector(".upload-image-container");
     if (uploadImageContainer) {
       renderUploadImageComponent({
@@ -74,77 +66,70 @@ export function renderAuthPageComponent({ appEl, setUser }) {
       });
     }
 
-    
     document.getElementById("login-button").addEventListener("click", () => {
       setError("");
 
       if (isLoginMode) {
-        
-        const login = document.getElementById("login-input").value;
-        const password = document.getElementById("password-input").value;
+        const login = document.getElementById("login-input").value.trim();
+        const password = document.getElementById("password-input").value.trim();
 
         if (!login) {
-          alert("Введите логин");
+          setError("Введите логин");
           return;
         }
 
         if (!password) {
-          alert("Введите пароль");
+          setError("Введите пароль");
           return;
         }
 
         loginUser({ login, password })
-          .then((user) => {
-            setUser(user.user);
+          .then((responseData) => {
+            setUser({ ...responseData.user, token: responseData.token });
           })
           .catch((error) => {
-            console.warn(error);
             setError(error.message);
           });
       } else {
-        
-        const login = document.getElementById("login-input").value;
-        const name = document.getElementById("name-input").value;
-        const password = document.getElementById("password-input").value;
+        const login = document.getElementById("login-input").value.trim();
+        const name = document.getElementById("name-input").value.trim();
+        const password = document.getElementById("password-input").value.trim();
 
         if (!name) {
-          alert("Введите имя");
+          setError("Введите имя");
           return;
         }
 
         if (!login) {
-          alert("Введите логин");
+          setError("Введите логин");
           return;
         }
 
         if (!password) {
-          alert("Введите пароль");
+          setError("Введите пароль");
           return;
         }
 
         if (!imageUrl) {
-          alert("Не выбрана фотография");
+          setError("Не выбрана фотография");
           return;
         }
 
         registerUser({ login, password, name, imageUrl })
-          .then((user) => {
-            setUser(user.user);
+          .then((responseData) => {
+            setUser({ ...responseData.user, token: responseData.token });
           })
           .catch((error) => {
-            console.warn(error);
             setError(error.message);
           });
       }
     });
 
-   
     document.getElementById("toggle-button").addEventListener("click", () => {
       isLoginMode = !isLoginMode;
-      renderForm(); 
+      renderForm();
     });
   };
 
-  
   renderForm();
 }

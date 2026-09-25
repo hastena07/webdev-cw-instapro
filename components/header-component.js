@@ -29,7 +29,6 @@ export function renderHeaderComponent({ element }) {
     </div>
   `;
 
-  // Клик по «Добавить пост» / «Войти»
   element
     .querySelector(".add-or-login-button")
     .addEventListener("click", () => {
@@ -40,12 +39,10 @@ export function renderHeaderComponent({ element }) {
       }
     });
 
-  // Клик по логотипу
   element.querySelector(".logo").addEventListener("click", () => {
     goToPage(POSTS_PAGE);
   });
 
-  // Клик по кнопке «Выйти»
   const logoutBtn = element.querySelector(".logout-button");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", logout);
